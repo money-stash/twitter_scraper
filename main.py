@@ -26,6 +26,7 @@ def parse_followers(text: str) -> int:
             except:
                 num = 0
             break
+
     return num
 
 
@@ -44,78 +45,83 @@ async def extract_usernames_from_spans(page):
 
 
 async def main():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context()
-        page = await context.new_page()
+    while True:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=False)
+            context = await browser.new_context()
+            page = await context.new_page()
 
-        await page.goto("https://x.com", wait_until="domcontentloaded")
-        await asyncio.sleep(random.uniform(3, 6))
+            await page.goto("https://x.com", wait_until="domcontentloaded")
+            await asyncio.sleep(random.uniform(3, 6))
 
-        await page.get_by_test_id("loginButton").first.click()
-        await asyncio.sleep(random.uniform(2, 5))
-
-        ui = page.locator('input[autocomplete="username"]')
-        await ui.fill(USERNAME)
-        await asyncio.sleep(random.uniform(2, 4))
-        await ui.press("Enter")
-        await asyncio.sleep(random.uniform(3, 6))
-
-        pi = page.locator('input[autocomplete="current-password"]')
-        await pi.fill(PASSWORD)
-        await asyncio.sleep(random.uniform(3, 6))
-        await pi.press("Enter")
-        await asyncio.sleep(random.uniform(6, 10))
-
-        await page.goto(
-            "https://x.com/realDonaldTrump/followers", wait_until="domcontentloaded"
-        )
-        await asyncio.sleep(random.uniform(5, 9))
-
-        usernames = set()
-
-        for _ in range(5):
-            await page.mouse.wheel(0, 2500)
-            await asyncio.sleep(random.uniform(4, 8))
-
-            new_batch = await extract_usernames_from_spans(page)
-            usernames |= new_batch
-
+            await page.get_by_test_id("loginButton").first.click()
             await asyncio.sleep(random.uniform(2, 5))
 
-        await asyncio.sleep(random.uniform(5, 10))
+            ui = page.locator('input[autocomplete="username"]')
+            await ui.fill(USERNAME)
+            await asyncio.sleep(random.uniform(2, 4))
+            await ui.press("Enter")
+            await asyncio.sleep(random.uniform(3, 6))
 
-        for username in usernames:
-            try:
-                rand_sleep = random.uniform(8, 15)
-                await asyncio.sleep(rand_sleep)
+            pi = page.locator('input[autocomplete="current-password"]')
+            await pi.fill(PASSWORD)
+            await asyncio.sleep(random.uniform(3, 6))
+            await pi.press("Enter")
+            await asyncio.sleep(random.uniform(6, 10))
 
-                await page.goto(
-                    f"https://x.com/{username}", wait_until="domcontentloaded"
-                )
-                await asyncio.sleep(random.uniform(5, 9))
+            await page.goto(
+                "https://x.com/realDonaldTrump/followers", wait_until="domcontentloaded"
+            )
+            await asyncio.sleep(random.uniform(5, 9))
 
-                link = page.locator(f'a[href="/{username}/verified_followers"]').first
-                text = await link.inner_text(timeout=7000)
+            usernames = set()
 
-                print(f"{username}: {text}")
-                followers = parse_followers(text)
+            for _ in range(5):
+                await page.mouse.wheel(0, 2500)
+                await asyncio.sleep(random.uniform(4, 8))
+
+                new_batch = await extract_usernames_from_spans(page)
+                usernames |= new_batch
 
                 await asyncio.sleep(random.uniform(2, 5))
 
-                if followers > THRESHOLD:
-                    btn = page.locator('button[aria-label^="Follow"]')
-                    if await btn.count() > 0:
-                        await asyncio.sleep(random.uniform(2, 4))
-                        await btn.first.click()
-                        await asyncio.sleep(random.uniform(4, 8))
+            await asyncio.sleep(random.uniform(5, 10))
 
-            except Exception as e:
-                print(f"{username}: ERROR {e}")
-                await asyncio.sleep(random.uniform(3, 6))
+            for username in usernames:
+                try:
+                    rand_sleep = random.uniform(8, 15)
+                    await asyncio.sleep(rand_sleep)
 
-        await asyncio.sleep(random.uniform(5, 10))
-        await browser.close()
+                    await page.goto(
+                        f"https://x.com/{username}", wait_until="domcontentloaded"
+                    )
+                    await asyncio.sleep(random.uniform(5, 9))
+
+                    link = page.locator(
+                        f'a[href="/{username}/verified_followers"]'
+                    ).first
+                    text = await link.inner_text(timeout=7000)
+
+                    print(f"{username}: {text}")
+                    followers = parse_followers(text)
+
+                    await asyncio.sleep(random.uniform(2, 5))
+
+                    if followers > THRESHOLD:
+                        btn = page.locator('button[aria-label^="Follow"]')
+                        if await btn.count() > 0:
+                            await asyncio.sleep(random.uniform(2, 4))
+                            await btn.first.click()
+                            await asyncio.sleep(random.uniform(4, 8))
+
+                except Exception as e:
+                    print(f"{username}: ERROR {e}")
+                    await asyncio.sleep(random.uniform(3, 6))
+
+            await asyncio.sleep(random.uniform(5, 10))
+            await browser.close()
+
+            await asyncio.sleep(120)
 
 
 if __name__ == "__main__":
