@@ -233,6 +233,9 @@ async def main():
             page = await context.new_page()
 
             await login(page)
+            users = await collect_usernames(page)
+            await follow_users(page, users)
+            await unfollow_users(page)
             await repost_posts(page, target="realDonaldTrump", times=3)
 
             await context.close()
