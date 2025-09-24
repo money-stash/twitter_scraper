@@ -26,7 +26,9 @@ async def login(page):
     pi = page.locator('input[autocomplete="current-password"]')
     await pi.fill(PASSWORD)
     await pi.press("Enter")
-    input("Press Enter after completing any CAPTCHA or 2FA...")
+
+    # input("Press Enter after completing any CAPTCHA or 2FA...")
+
     try:
         await page.wait_for_selector(
             '[data-testid="SideNav_AccountSwitcher_Button"], a[aria-label="Profile"]',
