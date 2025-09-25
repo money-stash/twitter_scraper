@@ -14,10 +14,16 @@ THRESHOLD = 250_000
 
 async def login(page):
     await page.goto("https://x.com", wait_until="domcontentloaded")
+
+    await asyncio.sleep(1)
+
     await short_sleep(0.4, 0.9)
+
     await page.get_by_test_id("loginButton").first.click()
     await page.wait_for_selector('input[autocomplete="username"]', timeout=15000)
+
     ui = page.locator('input[autocomplete="username"]')
+
     await ui.fill(USERNAME)
     await ui.press("Enter")
     await page.wait_for_selector(
@@ -45,6 +51,9 @@ async def collect_usernames(page):
         "https://x.com/realDonaldTrump/followers", wait_until="domcontentloaded"
     )
     await page.wait_for_selector('div[role="list"]', timeout=20000)
+
+    await asyncio.sleep(1)
+
     usernames = set()
     for _ in range(10):
         await page.mouse.wheel(0, 3500)
@@ -59,6 +68,9 @@ async def follow_users(page, usernames, threshold=THRESHOLD):
         try:
             await short_sleep(0.9, 1.8)
             await page.goto(f"https://x.com/{username}", wait_until="domcontentloaded")
+
+            await asyncio.sleep(1)
+
             await page.wait_for_selector('a[href$="/verified_followers"]', timeout=7000)
             link = page.locator(f'a[href="/{username}/verified_followers"]').first
             text = await link.inner_text(timeout=7000)
