@@ -15,12 +15,15 @@ THRESHOLD = 250_000
 async def login(page):
     await page.goto("https://x.com", wait_until="domcontentloaded")
 
-    await asyncio.sleep(1)
+    await asyncio.sleep(5)
 
     await short_sleep(0.4, 0.9)
 
-    await page.get_by_test_id("loginButton").first.click()
-    await page.wait_for_selector('input[autocomplete="username"]', timeout=15000)
+    try:
+        await page.get_by_test_id("loginButton").first.click()
+        await page.wait_for_selector('input[autocomplete="username"]', timeout=15000)
+    except:
+        return
 
     ui = page.locator('input[autocomplete="username"]')
 
@@ -38,22 +41,38 @@ async def login(page):
     try:
         await page.wait_for_selector(
             '[data-testid="SideNav_AccountSwitcher_Button"], a[aria-label="Profile"]',
-            timeout=20000,
+            timeout=10000,
         )
+    except:
+        ...
+
+
+async def wait_for_any_selector(page, selectors, timeout=20000):
+    try:
+        loc = page.locator(",".join(selectors))
+        await loc.first.wait_for(state="visible", timeout=timeout)
+        return loc
     except PlaywrightTimeoutError:
-        await page.wait_for_selector(
-            'nav[role="navigation"], [data-testid="primaryColumn"]', timeout=20000
-        )
+        return None
 
 
 async def collect_usernames(page):
     await page.goto(
         "https://x.com/realDonaldTrump/followers", wait_until="domcontentloaded"
     )
-    await page.wait_for_selector('div[role="list"]', timeout=20000)
-
+    container = await wait_for_any_selector(
+        page,
+        [
+            'div[role="list"]',
+            'section[role="region"]',
+            '[data-testid="UserCell"]',
+            '[data-testid="cellInnerDiv"]',
+        ],
+        timeout=20000,
+    )
+    if container is None:
+        return set()
     await asyncio.sleep(1)
-
     usernames = set()
     for _ in range(10):
         await page.mouse.wheel(0, 3500)
@@ -247,8 +266,8 @@ async def main():
             await login(page)
             users = await collect_usernames(page)
             await follow_users(page, users)
-            await unfollow_users(page)
-            await repost_posts(page, target="realDonaldTrump", times=3)
+            # await unfollow_users(page)
+            # await repost_posts(page, target="realDonaldTrump", times=3)
 
             await context.close()
             await browser.close()
