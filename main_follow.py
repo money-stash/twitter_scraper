@@ -6,7 +6,7 @@ from playwright.async_api import (
 )
 
 from utils.mini_utils import parse_followers, extract_usernames_from_spans, short_sleep
-from сonfig import USERNAME, PASSWORD, NICKNAME
+from сonfig import USERNAME, PASSWORD, NICKNAME, SCRAPING_PROFILE
 
 
 THRESHOLD = 250_000
@@ -58,7 +58,7 @@ async def wait_for_any_selector(page, selectors, timeout=20000):
 
 async def collect_usernames(page):
     await page.goto(
-        "https://x.com/realDonaldTrump/followers", wait_until="domcontentloaded"
+        f"https://x.com/{SCRAPING_PROFILE}/followers", wait_until="domcontentloaded"
     )
     container = await wait_for_any_selector(
         page,

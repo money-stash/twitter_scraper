@@ -1,0 +1,6 @@
+install:
+1) go to https://github.com/money-stash/twitter_scraper 
+2) click green button "Code" and download ZIP
+3) launch install.bat file (install)
+4) change data in config to your account
+5) launch start files
